@@ -1,5 +1,52 @@
 gsap.registerPlugin(ScrollTrigger);
 
+// --- Intro Sequence ---
+const initIntro = () => {
+    const overlay = document.getElementById("intro-overlay");
+    const text = document.querySelector(".intro-text");
+    
+    if (overlay && text) {
+        let isSkipped = false;
+        
+        const cleanup = () => {
+            if (overlay.parentNode) {
+                overlay.parentNode.removeChild(overlay);
+            }
+        };
+
+        const skipIntro = () => {
+            if (isSkipped) return;
+            isSkipped = true;
+            
+            overlay.style.opacity = "0";
+            setTimeout(cleanup, 1000);
+        };
+
+        overlay.addEventListener("click", skipIntro);
+        
+        setTimeout(() => {
+            if (isSkipped) return;
+            text.style.opacity = "1";
+            
+            setTimeout(() => {
+                if (isSkipped) return;
+                overlay.style.opacity = "0";
+                
+                setTimeout(() => {
+                    if (isSkipped) return;
+                    cleanup();
+                }, 1000);
+            }, 2500); // 1s fade in + 1.5s hold
+        }, 100);
+    }
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initIntro);
+} else {
+    initIntro();
+}
+
 // --- Content Generation ---
 const chaptersContainer = document.getElementById('chapters-container');
 const chaptersData = [
