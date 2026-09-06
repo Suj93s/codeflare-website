@@ -10,10 +10,46 @@
     <canvas id="webgl-canvas"></canvas>
     
     <main>
+        <!-- Myth Fragments (Collectibles) -->
+        <div class="myth-fragments-container">
+            <div class="myth-fragment" id="frag-0"><span>✦</span></div>
+            <div class="myth-fragment" id="frag-1"><span>✦</span></div>
+            <div class="myth-fragment" id="frag-2"><span>✦</span></div>
+            <div class="myth-fragment" id="frag-3"><span>✦</span></div>
+            <div class="myth-fragment" id="frag-4"><span>✦</span></div>
+        </div>
+
         <section class="section hero" id="section-hero">
             <div class="content">
                 <h1>Legends Reawakened</h1>
                 <h2>Mythology & Folklore Reimagined</h2>
+                
+                <div class="legend-selector">
+                    <p class="selector-title">Choose the Legend</p>
+                    <div class="orbs-container">
+                        <div class="orb-wrapper" onclick="scrollToChapter('icarus')" style="--bob-delay: 0s;">
+                            <div class="orb" style="--orb-color: #ffaa00;"></div>
+                            <span class="orb-tooltip">Icarus</span>
+                        </div>
+                        <div class="orb-wrapper" onclick="scrollToChapter('ravana')" style="--bob-delay: 0.2s;">
+                            <div class="orb" style="--orb-color: #cc0000;"></div>
+                            <span class="orb-tooltip">Ravana's Ten Heads</span>
+                        </div>
+                        <div class="orb-wrapper" onclick="scrollToChapter('yakshi')" style="--bob-delay: 0.4s;">
+                            <div class="orb" style="--orb-color: #88bbff;"></div>
+                            <span class="orb-tooltip">Yakshi</span>
+                        </div>
+                        <div class="orb-wrapper" onclick="scrollToChapter('phoenix')" style="--bob-delay: 0.1s;">
+                            <div class="orb" style="--orb-color: #ff4400;"></div>
+                            <span class="orb-tooltip">Phoenix</span>
+                        </div>
+                        <div class="orb-wrapper" onclick="scrollToChapter('kappa')" style="--bob-delay: 0.3s;">
+                            <div class="orb" style="--orb-color: #00ff88;"></div>
+                            <span class="orb-tooltip">Kappa</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="scroll-indicator">
                     <p>Scroll to explore</p>
                     <div class="arrow">↓</div>
@@ -24,9 +60,18 @@
         <!-- Chapters will be generated via JS -->
         <div id="chapters-container"></div>
 
+        <div class="progress-indicator">
+            <div class="dot" data-index="0"></div>
+            <div class="dot" data-index="1"></div>
+            <div class="dot" data-index="2"></div>
+            <div class="dot" data-index="3"></div>
+            <div class="dot" data-index="4"></div>
+        </div>
+
         <section class="section closing" id="section-closing">
             <div class="content">
                 <h2>Every legend carries a warning, a wonder, or a wish.</h2>
+                <div class="completion-badge" id="completion-badge">All Legends Reawakened</div>
             </div>
         </section>
     </main>

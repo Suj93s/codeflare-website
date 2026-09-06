@@ -11,7 +11,10 @@ const chaptersData = [
         themeColor: "#ffaa00",
         lightColor: 0xffaa00,
         ambientColor: 0x442200,
-        fogColor: 0x0a0500
+        fogColor: 0x0a0500,
+        riddle: "What warned him, and what did he ignore?",
+        options: ["The sun's heat", "His father's counsel"],
+        reply: "Perhaps both truths can coexist in a single fall."
     },
     {
         id: "ravana",
@@ -21,7 +24,10 @@ const chaptersData = [
         themeColor: "#cc0000",
         lightColor: 0xff0000,
         ambientColor: 0x110000,
-        fogColor: 0x1a0000
+        fogColor: 0x1a0000,
+        riddle: "Was his downfall knowledge, or the pride it fed?",
+        options: ["Knowledge itself", "Unchecked pride"],
+        reply: "The greatest mind can be its own heaviest anchor."
     },
     {
         id: "yakshi",
@@ -31,7 +37,10 @@ const chaptersData = [
         themeColor: "#88bbff",
         lightColor: 0x88bbff,
         ambientColor: 0x001133,
-        fogColor: 0x001122
+        fogColor: 0x001122,
+        riddle: "Is she a warning, or a mirror of desire?",
+        options: ["A warning", "A mirror"],
+        reply: "She is whatever the wanderer's heart conceals."
     },
     {
         id: "phoenix",
@@ -41,7 +50,10 @@ const chaptersData = [
         themeColor: "#ff4400",
         lightColor: 0xff4400,
         ambientColor: 0x331100,
-        fogColor: 0x1a0500
+        fogColor: 0x1a0500,
+        riddle: "Does the fire destroy, or does it cleanse?",
+        options: ["It destroys", "It cleanses"],
+        reply: "To rise as ash is to be freed from form."
     },
     {
         id: "kappa",
@@ -51,7 +63,10 @@ const chaptersData = [
         themeColor: "#00ff88",
         lightColor: 0x00ff88,
         ambientColor: 0x002211,
-        fogColor: 0x001a11
+        fogColor: 0x001a11,
+        riddle: "Guardian of the water, or its mischievous thief?",
+        options: ["A guardian", "A trickster"],
+        reply: "The river answers only to its own current."
     }
 ];
 
@@ -69,6 +84,14 @@ chaptersData.forEach((chapter, index) => {
         <div class="chapter-number">${chapter.number}</div>
         <h2 class="chapter-title">${chapter.title}</h2>
         <p class="chapter-text">${chapter.text}</p>
+        <div class="chapter-riddle">
+            <p class="riddle-q">${chapter.riddle}</p>
+            <div class="riddle-options">
+                <button onclick="revealReply(this)">${chapter.options[0]}</button>
+                <button onclick="revealReply(this)">${chapter.options[1]}</button>
+            </div>
+            <p class="riddle-reply">${chapter.reply}</p>
+        </div>
     `;
     
     section.appendChild(content);
@@ -120,7 +143,7 @@ const createParticles = (count, color, size = 0.05) => {
 
 // Hero Object (Before Chapter 1)
 const heroGroup = new THREE.Group();
-const heroGeometry = new THREE.IcosahedronGeometry(1.5, 1);
+const heroGeometry = new THREE.IcosahedronGeometry(2.2, 1);
 const heroMaterial = new THREE.MeshStandardMaterial({ 
     color: 0xaaaaaa, 
     wireframe: true,
@@ -130,6 +153,32 @@ const heroMaterial = new THREE.MeshStandardMaterial({
 });
 const heroMesh = new THREE.Mesh(heroGeometry, heroMaterial);
 heroGroup.add(heroMesh);
+
+// Soft radial glow behind wireframe
+const canvasGlow = document.createElement('canvas');
+canvasGlow.width = 128;
+canvasGlow.height = 128;
+const ctxGlow = canvasGlow.getContext('2d');
+const grad = ctxGlow.createRadialGradient(64, 64, 0, 64, 64, 64);
+grad.addColorStop(0, 'rgba(255, 170, 0, 0.4)');
+grad.addColorStop(1, 'rgba(255, 170, 0, 0)');
+ctxGlow.fillStyle = grad;
+ctxGlow.fillRect(0, 0, 128, 128);
+
+const glowTexture = new THREE.CanvasTexture(canvasGlow);
+const glowMaterial = new THREE.SpriteMaterial({ 
+    map: glowTexture, 
+    blending: THREE.AdditiveBlending, 
+    depthWrite: false,
+    transparent: true,
+    opacity: 1
+});
+const glowSprite = new THREE.Sprite(glowMaterial);
+glowSprite.scale.set(8, 8, 1);
+glowSprite.position.set(0, 0, 0); // Center it so it doesn't orbit
+glowSprite.renderOrder = -1; // Force render behind the icosahedron
+heroGroup.add(glowSprite);
+
 scene.add(heroGroup);
 
 // Chapter 1: Icarus
@@ -153,7 +202,10 @@ const createIcarus = () => {
     const feathers = createParticles(400, 0xffddaa, 0.06);
     group.add(feathers);
     
-    group.userData.update = (time) => {
+    const baseSunX = -2;
+    const baseSunY = 0;
+    
+    group.userData.update = (time, delta) => {
         const positions = feathers.geometry.attributes.position.array;
         for(let i = 1; i < positions.length; i+=3) {
             positions[i] -= 0.015; // falling
@@ -161,7 +213,12 @@ const createIcarus = () => {
             positions[i-1] += Math.sin(time + i) * 0.005; // swaying
         }
         feathers.geometry.attributes.position.needsUpdate = true;
-        sun.rotation.y += 0.002;
+        
+        // Mouse reaction (parallax position and tilt)
+        sun.position.x = baseSunX + mouse.x * 0.4;
+        sun.position.y = baseSunY + mouse.y * 0.4;
+        sun.rotation.x = -mouse.y * 0.2; // tilt
+        sun.rotation.y = time * 0.1 + mouse.x * 0.2;
     };
     return group;
 };
@@ -169,28 +226,61 @@ const createIcarus = () => {
 // Chapter 2: Ravana's Ten Heads
 const createRavana = () => {
     const group = new THREE.Group();
-    const geometry = new THREE.ConeGeometry(0.8, 2, 4);
-    const material = new THREE.MeshStandardMaterial({
-        color: 0x440000,
-        emissive: 0x110000,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.8
-    });
+    group.position.set(2.5, 0, -2); // Visual on the right
     
-    for(let i = 0; i < 10; i++) {
-        const mask = new THREE.Mesh(geometry, material);
-        const angle = (i / 10) * Math.PI * 2;
-        mask.position.x = Math.cos(angle) * 2.5;
-        mask.position.z = Math.sin(angle) * 2.5;
-        mask.lookAt(0,0,0);
-        group.add(mask);
+    const maskCount = 4;
+    for(let i = 0; i < maskCount; i++) {
+        const maskGroup = new THREE.Group();
+        
+        // Base mask shape
+        const coneGeo = new THREE.ConeGeometry(0.8, 1.8, 4);
+        const coneMat = new THREE.MeshStandardMaterial({
+            color: 0x660000, // dark red
+            emissive: 0x220000,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.8
+        });
+        const cone = new THREE.Mesh(coneGeo, coneMat);
+        
+        // Gold halo/crown arch
+        const haloGeo = new THREE.TorusGeometry(0.9, 0.04, 8, 24, Math.PI);
+        const haloMat = new THREE.MeshStandardMaterial({
+            color: 0xffaa00, // gold
+            emissive: 0x442200,
+            transparent: true,
+            opacity: 0.9
+        });
+        const halo = new THREE.Mesh(haloGeo, haloMat);
+        halo.position.y = 0.5;
+        halo.rotation.x = Math.PI / 12; // tilt slightly
+        
+        maskGroup.add(cone);
+        maskGroup.add(halo);
+        
+        // Fan arrangement
+        const angle = (i - (maskCount - 1) / 2) * 0.45; // Fan spread
+        maskGroup.rotation.z = -angle;
+        maskGroup.rotation.y = angle * 0.5;
+        maskGroup.position.x = Math.sin(angle) * 0.8;
+        maskGroup.position.z = -Math.abs(angle) * 0.8;
+        
+        group.add(maskGroup);
     }
     
-    group.userData.update = (time) => {
-        group.rotation.y = time * 0.15;
+    let currentRotation = 0;
+    let rotationSpeed = 0.002;
+    group.userData.update = (time, delta) => {
+        // Approximate screen position of Ravana (it's on the right)
+        const dist = Math.hypot(mouse.x - 0.4, mouse.y);
+        const targetSpeed = dist < 0.5 ? 0.012 : 0.002;
+        rotationSpeed += (targetSpeed - rotationSpeed) * 0.05;
+        
+        currentRotation += rotationSpeed;
+        group.rotation.y = currentRotation + Math.sin(time * 0.5) * 0.1; // Continuous rotation + sway
+        
         group.children.forEach((child, i) => {
-            child.position.y = Math.sin(time * 2 + i) * 0.2;
+            child.position.y = Math.sin(time * 1.5 + i) * 0.1; // bobbing
         });
     };
     return group;
@@ -199,6 +289,10 @@ const createRavana = () => {
 // Chapter 3: Yakshi
 const createYakshi = () => {
     const group = new THREE.Group();
+    group.position.set(-2.5, 0, -2); // Visual on the left
+    
+    const treeGroup = new THREE.Group();
+    group.add(treeGroup);
     
     const treeMat = new THREE.MeshStandardMaterial({ 
         color: 0x050a10, 
@@ -208,29 +302,34 @@ const createYakshi = () => {
     });
     
     const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.3, 5, 8), treeMat);
-    trunk.position.set(2, -1, -1);
-    group.add(trunk);
+    trunk.position.set(0, -1, 0);
+    treeGroup.add(trunk);
     
     for(let i=0; i<6; i++) {
         const branch = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.08, 2.5, 8), treeMat);
-        branch.position.set(2, i * 0.6, -1);
+        branch.position.set(0, i * 0.6, 0);
         branch.rotation.z = (Math.random() - 0.5) * 2;
         branch.rotation.x = (Math.random() - 0.5) * 2;
         branch.position.x += Math.sin(branch.rotation.z) * 1.2;
         branch.position.y += Math.cos(branch.rotation.z) * 1.2;
-        group.add(branch);
+        treeGroup.add(branch);
     }
     
     const mist = createParticles(600, 0x88bbff, 0.15);
     group.add(mist);
     
-    group.userData.update = (time) => {
+    let treeSway = 0;
+    group.userData.update = (time, delta) => {
         mist.rotation.y = time * 0.03;
         const positions = mist.geometry.attributes.position.array;
         for(let i = 0; i < positions.length; i+=3) {
             positions[i] += Math.sin(time + positions[i+1]) * 0.001;
         }
         mist.geometry.attributes.position.needsUpdate = true;
+        
+        // Mouse wind effect (subtle sway on Z-axis)
+        treeSway += (mouse.x * 0.3 - treeSway) * 0.05;
+        treeGroup.rotation.z = treeSway + Math.sin(time * 0.5) * 0.02;
     };
     return group;
 };
@@ -238,9 +337,11 @@ const createYakshi = () => {
 // Chapter 4: Phoenix
 const createPhoenix = () => {
     const group = new THREE.Group();
+    group.position.set(2.5, 0, -2); // Visual on the right
     const embers = createParticles(1000, 0xff5500, 0.05);
     
     const positions = embers.geometry.attributes.position.array;
+    const baseXs = new Float32Array(1000);
     for(let i=0; i<positions.length; i+=3) {
         let x = (Math.random() - 0.5) * 8;
         let y = (Math.random() - 0.5) * 6;
@@ -252,20 +353,40 @@ const createPhoenix = () => {
         positions[i] = x;
         positions[i+1] = y;
         positions[i+2] = z;
+        baseXs[i/3] = x;
     }
     group.add(embers);
     
-    group.userData.update = (time) => {
+    group.userData.update = (time, delta) => {
+        const smX = mouse.x * 5 - 2.5; // adjust for group offset
+        const smY = mouse.y * 3;
+        
         const positions = embers.geometry.attributes.position.array;
         for(let i=1; i<positions.length; i+=3) {
+            const index = (i-1)/3;
             positions[i] += 0.02 + Math.random() * 0.02; // rise
-            positions[i-1] += Math.sin(time*2 + i) * 0.005; // flutter
+            
+            // Drift back to base X + flutter
+            const targetX = baseXs[index] + Math.sin(time*2 + i) * 0.1;
+            positions[i-1] += (targetX - positions[i-1]) * 0.05;
+            
+            // Mouse repel
+            const dx = positions[i-1] - smX;
+            const dy = positions[i] - smY;
+            const distSq = dx*dx + dy*dy;
+            if(distSq < 4.0) {
+                const force = (4.0 - distSq) * 0.02;
+                positions[i-1] += dx * force;
+                positions[i] += dy * force;
+            }
+            
             if(positions[i] > 5) {
                 positions[i] = -5;
-                let x = positions[i-1];
+                let x = baseXs[index];
                 if(Math.abs(x) > 1) {
                     positions[i] += Math.abs(x) * 0.6 - 2;
                 }
+                positions[i-1] = x;
             }
         }
         embers.geometry.attributes.position.needsUpdate = true;
@@ -313,11 +434,28 @@ const createKappa = () => {
     group.add(kappaGroup);
     
     group.userData.update = (time) => {
+        const mouseX = mouse.x * 6;
+        const mouseY = mouse.y * 6; // approximate projection onto plane
+
         const vertices = water.geometry.attributes.position.array;
         for (let i = 0; i < vertices.length; i += 3) {
             const x = vertices[i];
             const y = vertices[i + 1];
-            vertices[i + 2] = Math.sin(x * 2 + time * 2) * 0.15 + Math.cos(y * 2 + time * 1.5) * 0.15;
+            
+            let baseZ = Math.sin(x * 2 + time * 2) * 0.15 + Math.cos(y * 2 + time * 1.5) * 0.15;
+            
+            // Cursor ripple interaction
+            const dx = x - mouseX;
+            const dy = y - mouseY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            let ripple = 0;
+            if (dist < 3.0) {
+                // Increased intensity near cursor
+                ripple = Math.sin(dist * 6 - time * 8) * (3.0 - dist) * 0.2;
+            }
+            
+            vertices[i + 2] = baseZ + ripple;
         }
         water.geometry.attributes.position.needsUpdate = true;
         kappaGroup.position.y = -1 + Math.sin(time * 2) * 0.1;
@@ -377,26 +515,38 @@ closingGroup.userData.update = (time) => {
 };
 
 
+// --- Mouse Tracking ---
+const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
+window.addEventListener('mousemove', (event) => {
+    mouse.targetX = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.targetY = -(event.clientY / window.innerHeight) * 2 + 1; // Standard webgl coords
+});
+
 // --- Animation Loop ---
 const clock = new THREE.Clock();
 
 function animate() {
     requestAnimationFrame(animate);
     const time = clock.getElapsedTime();
+    const delta = clock.getDelta();
+    
+    // Smooth mouse follow
+    mouse.x += (mouse.targetX - mouse.x) * 0.05;
+    mouse.y += (mouse.targetY - mouse.y) * 0.05;
     
     if(heroGroup.visible) {
-        heroGroup.rotation.x = time * 0.2;
-        heroGroup.rotation.y = time * 0.3;
+        heroGroup.rotation.x = time * 0.35;
+        heroGroup.rotation.y = time * 0.45;
     }
     
     chapterGroups.forEach(group => {
         if(group.visible && group.userData.update) {
-            group.userData.update(time);
+            group.userData.update(time, delta);
         }
     });
     
     if(closingGroup.visible && closingGroup.userData.update) {
-        closingGroup.userData.update(time);
+        closingGroup.userData.update(time, delta);
     }
     
     renderer.render(scene, camera);
@@ -414,36 +564,7 @@ window.addEventListener('resize', () => {
 
 // --- ScrollTrigger Setup ---
 
-// Helper for fading materials in a group
-function fadeGroup(group, targetState, duration = 1) {
-    console.log(`Fading group to state: ${targetState}`, group);
-    if (targetState === 1) group.visible = true;
-    
-    group.traverse((child) => {
-        if (child.isMesh || child.isPoints) {
-            const mat = child.material;
-            const targetOpacity = targetState === 1 ? mat.userData.originalOpacity : 0;
-            gsap.to(mat, {
-                opacity: targetOpacity,
-                duration: duration,
-                ease: "power2.inOut"
-            });
-        }
-    });
-
-    if (targetState === 0) {
-        gsap.delayedCall(duration, () => {
-            // Check if it should actually be hidden (in case scroll reversed quickly)
-            let isZero = true;
-            group.traverse(child => {
-                if(child.isMesh || child.isPoints) {
-                    if(child.material.opacity > 0.01) isZero = false;
-                }
-            });
-            if(isZero) group.visible = false;
-        });
-    }
-}
+// --- ScrollTrigger Setup ---
 
 // Helper for color transitions
 const proxyColor = {
@@ -461,17 +582,63 @@ function updateColors() {
     document.body.style.backgroundColor = `rgb(${Math.round(proxyColor.fogR*255)}, ${Math.round(proxyColor.fogG*255)}, ${Math.round(proxyColor.fogB*255)})`;
 }
 
+// Progress Indicator logic
+const dots = document.querySelectorAll('.progress-indicator .dot');
+function updateDot(activeIndex, color) {
+    dots.forEach((dot, i) => {
+        if (i === activeIndex) {
+            dot.classList.add('active');
+            dot.style.setProperty('--active-color', color);
+        } else {
+            dot.classList.remove('active');
+        }
+    });
+}
+
 // 1. Hero Animations
+heroGroup.visible = true;
+const heroMats = [];
 heroGroup.traverse(c => {
-    if(c.isMesh) c.material.userData.originalOpacity = 1;
+    if(c.isMesh || c.isSprite) {
+        c.material.userData.originalOpacity = 1;
+        heroMats.push(c.material);
+    }
 });
 
+// Scrub hero 3D fade out
+gsap.to(heroMats, {
+    opacity: 0,
+    scrollTrigger: {
+        trigger: "#section-hero",
+        start: "bottom 80%",
+        end: "bottom 30%",
+        scrub: true,
+        onLeave: () => heroGroup.visible = false,
+        onEnterBack: () => heroGroup.visible = true
+    }
+});
+
+// State changes for Hero -> Chapter 1 transition
 ScrollTrigger.create({
     trigger: "#section-hero",
     start: "top top",
     end: "bottom 50%",
-    onLeave: () => { fadeGroup(heroGroup, 0, 1); },
-    onEnterBack: () => { fadeGroup(heroGroup, 1, 1); }
+    onLeave: () => { 
+        document.querySelector('.progress-indicator').classList.add('visible');
+    },
+    onEnterBack: () => { 
+        document.querySelector('.progress-indicator').classList.remove('visible');
+        
+        // Reverse Color to Hero state
+        gsap.to(proxyColor, {
+            ambientR: initialFogColor.r, ambientG: initialFogColor.g, ambientB: initialFogColor.b,
+            lightR: 1, lightG: 1, lightB: 1,
+            fogR: initialFogColor.r, fogG: initialFogColor.g, fogB: initialFogColor.b,
+            duration: 1.0,
+            ease: "power2.inOut",
+            onUpdate: updateColors
+        });
+    }
 });
 
 gsap.to(".hero .content", {
@@ -497,40 +664,93 @@ chapterSections.forEach((section, index) => {
     const targetLight = new THREE.Color(data.lightColor);
     const targetFog = new THREE.Color(data.fogColor);
     
-    // Scene Transitions
+    const materials = [];
+    group.traverse(c => {
+        if(c.isMesh || c.isPoints) materials.push(c.material);
+    });
+
+    // 3D Fade IN/OUT scrubbed timeline
+    const tl = gsap.timeline({
+        scrollTrigger: {
+            trigger: section,
+            start: "top 80%",
+            end: "bottom 20%",
+            scrub: true,
+            onEnter: () => group.visible = true,
+            onLeave: () => group.visible = false,
+            onEnterBack: () => group.visible = true,
+            onLeaveBack: () => group.visible = false
+        }
+    });
+
+    materials.forEach(mat => {
+        const orig = mat.userData.originalOpacity || 1;
+        tl.fromTo(mat, { opacity: 0 }, { opacity: orig, duration: 0.2, ease: "none" }, 0);
+        tl.to(mat, { opacity: 0, duration: 0.2, ease: "none" }, 0.8);
+    });
+
+    // State changes (colors, dots, fragments)
     ScrollTrigger.create({
         trigger: section,
-        start: "top 60%",
-        end: "bottom 40%",
+        start: "top 50%",
+        end: "bottom 50%",
         onEnter: () => {
-            fadeGroup(group, 1, 1);
+            updateDot(index, data.themeColor);
+            
+            const frag = document.getElementById(`frag-${index}`);
+            if(frag) {
+                frag.classList.add('collected');
+                frag.style.setProperty('--frag-color', data.themeColor);
+            }
+
             gsap.to(proxyColor, {
                 ambientR: targetAmbient.r, ambientG: targetAmbient.g, ambientB: targetAmbient.b,
                 lightR: targetLight.r, lightG: targetLight.g, lightB: targetLight.b,
                 fogR: targetFog.r, fogG: targetFog.g, fogB: targetFog.b,
-                duration: 1.5,
+                duration: 1.0,
                 ease: "power2.inOut",
                 onUpdate: updateColors
             });
         },
-        onLeave: () => {
-            fadeGroup(group, 0, 1);
-        },
         onEnterBack: () => {
-            fadeGroup(group, 1, 1);
+            updateDot(index, data.themeColor);
+            
+            const frag = document.getElementById(`frag-${index}`);
+            if(frag) {
+                frag.classList.add('collected');
+                frag.style.setProperty('--frag-color', data.themeColor);
+            }
+
             gsap.to(proxyColor, {
                 ambientR: targetAmbient.r, ambientG: targetAmbient.g, ambientB: targetAmbient.b,
                 lightR: targetLight.r, lightG: targetLight.g, lightB: targetLight.b,
                 fogR: targetFog.r, fogG: targetFog.g, fogB: targetFog.b,
-                duration: 1.5,
+                duration: 1.0,
                 ease: "power2.inOut",
                 onUpdate: updateColors
             });
         },
         onLeaveBack: () => {
-            fadeGroup(group, 0, 1);
+            const frag = document.getElementById(`frag-${index}`);
+            if(frag) {
+                frag.classList.remove('collected');
+            }
         }
     });
+
+    // 3D Parallax Depth effect
+    gsap.fromTo(group.position,
+        { y: -1.5 },
+        { 
+            y: 1.5,
+            scrollTrigger: {
+                trigger: section,
+                start: "top bottom",
+                end: "bottom top",
+                scrub: 1
+            }
+        }
+    );
     
     // Content Scroll Parallax & Fade
     gsap.fromTo(content, 
@@ -560,27 +780,101 @@ chapterSections.forEach((section, index) => {
 });
 
 // 3. Closing Animations
+closingGroup.visible = false;
+const closingMats = [];
+closingGroup.traverse(c => {
+    if(c.isPoints) closingMats.push(c.material);
+});
+
+gsap.to(closingMats, {
+    opacity: 0.8,
+    scrollTrigger: {
+        trigger: "#section-closing",
+        start: "top 80%",
+        end: "top 30%",
+        scrub: true,
+        onEnter: () => closingGroup.visible = true,
+        onLeaveBack: () => closingGroup.visible = false
+    }
+});
+
 ScrollTrigger.create({
     trigger: "#section-closing",
-    start: "top 70%",
+    start: "top 50%",
     onEnter: () => {
-        fadeGroup(closingGroup, 1, 1.5);
+        document.querySelector('.progress-indicator').classList.remove('visible');
+        
+        const badge = document.getElementById('completion-badge');
+        if (badge) badge.classList.add('visible');
+        document.querySelectorAll('.myth-fragment').forEach(f => f.classList.add('fully-lit'));
+
         gsap.to(proxyColor, {
             ambientR: 0.05, ambientG: 0.05, ambientB: 0.08,
             lightR: 1, lightG: 1, lightB: 1,
             fogR: 0.02, fogG: 0.03, fogB: 0.05,
-            duration: 2,
+            duration: 1.5,
             ease: "power2.inOut",
             onUpdate: updateColors
         });
     },
     onLeaveBack: () => {
-        fadeGroup(closingGroup, 0, 1);
+        document.querySelector('.progress-indicator').classList.add('visible');
+        
+        const badge = document.getElementById('completion-badge');
+        if (badge) badge.classList.remove('visible');
+        document.querySelectorAll('.myth-fragment').forEach(f => f.classList.remove('fully-lit'));
+        
+        // Reverse Color to Chapter 5 (Kappa)
+        const kappaData = chaptersData[4];
+        const targetAmbient = new THREE.Color(kappaData.ambientColor);
+        const targetLight = new THREE.Color(kappaData.lightColor);
+        const targetFog = new THREE.Color(kappaData.fogColor);
+        
+        gsap.to(proxyColor, {
+            ambientR: targetAmbient.r, ambientG: targetAmbient.g, ambientB: targetAmbient.b,
+            lightR: targetLight.r, lightG: targetLight.g, lightB: targetLight.b,
+            fogR: targetFog.r, fogG: targetFog.g, fogB: targetFog.b,
+            duration: 1.5,
+            ease: "power2.inOut",
+            onUpdate: updateColors
+        });
     }
 });
 
-// Initial hero appearance
-gsap.fromTo(".hero .content", 
-    { opacity: 0, y: 30 }, 
-    { opacity: 1, y: 0, duration: 1.5, ease: "power2.out", delay: 0.2 }
+// Initial hero appearance (Staggered)
+const heroElements = [
+    ".hero h1", 
+    ".hero h2", 
+    ".selector-title", 
+    ".orb-wrapper", 
+    ".scroll-indicator"
+];
+gsap.fromTo(heroElements, 
+    { opacity: 0, y: 25 }, 
+    { opacity: 1, y: 0, duration: 1.2, ease: "power2.out", delay: 0.2, stagger: 0.12 }
 );
+
+// Legend Selector smooth scroll
+window.scrollToChapter = (id) => {
+    const el = document.getElementById(`section-${id}`);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+    }
+};
+
+// Riddle interaction
+window.revealReply = (btn) => {
+    const riddleDiv = btn.closest('.chapter-riddle');
+    const options = riddleDiv.querySelectorAll('button');
+    options.forEach(opt => {
+        opt.disabled = true;
+        if(opt !== btn) {
+            opt.style.opacity = '0.4';
+        } else {
+            opt.style.borderColor = 'var(--theme-color)';
+            opt.style.backgroundColor = 'rgba(255,255,255,0.1)';
+        }
+    });
+    const reply = riddleDiv.querySelector('.riddle-reply');
+    reply.classList.add('visible');
+};
