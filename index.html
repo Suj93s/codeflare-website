@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legends Reawakened</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="webgl-canvas"></canvas>
+    
+    <main>
+        <section class="section hero" id="section-hero">
+            <div class="content">
+                <h1>Legends Reawakened</h1>
+                <h2>Mythology & Folklore Reimagined</h2>
+                <div class="scroll-indicator">
+                    <p>Scroll to explore</p>
+                    <div class="arrow">↓</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chapters will be generated via JS -->
+        <div id="chapters-container"></div>
+
+        <section class="section closing" id="section-closing">
+            <div class="content">
+                <h2>Every legend carries a warning, a wonder, or a wish.</h2>
+            </div>
+        </section>
+    </main>
+
+    <!-- GSAP & ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Our Script -->
+    <script src="main.js"></script>
+</body>
+</html>

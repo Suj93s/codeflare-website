@@ -1,0 +1,194 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+    --text-primary: #f5f5f7;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --bg-overlay: rgba(10, 15, 25, 0.6);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #050810;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    line-height: 1.6;
+    transition: background-color 0.5s ease;
+}
+
+h1, h2, h3, .chapter-title, .chapter-number {
+    font-family: 'Cinzel', serif;
+}
+
+#webgl-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+}
+
+main {
+    position: relative;
+    z-index: 1;
+}
+
+.section {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 5%;
+    position: relative;
+}
+
+.hero {
+    align-items: center;
+    text-align: center;
+}
+
+.hero h1 {
+    font-size: clamp(3rem, 6vw, 6rem);
+    margin-bottom: 1rem;
+    letter-spacing: 2px;
+    background: linear-gradient(to right, #ffffff, #aaaaaa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+}
+
+.hero h2 {
+    font-size: clamp(1.2rem, 2vw, 2rem);
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    color: var(--text-secondary);
+    margin-bottom: 4rem;
+}
+
+.scroll-indicator {
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    opacity: 0.8;
+    animation: bounce 2s infinite ease-in-out;
+}
+
+.scroll-indicator p {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-secondary);
+}
+
+.arrow {
+    font-size: 1.5rem;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+.chapter-section {
+    display: flex;
+    align-items: center;
+    padding: 15vh 5%;
+    min-height: 120vh; /* Make sections slightly taller for better scroll pacing */
+}
+
+.chapter-content {
+    max-width: 500px;
+    padding: 3rem;
+    background: var(--bg-overlay);
+    border-radius: 12px;
+    border-left: 4px solid var(--theme-color, #ffffff);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    /* initial state for gsap */
+    opacity: 0;
+    transform: translateY(50px);
+}
+
+.chapter-number {
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: var(--theme-color, #ffffff);
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.chapter-title {
+    font-size: clamp(2rem, 3.5vw, 3.5rem);
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.chapter-text {
+    font-size: 1.15rem;
+    color: var(--text-secondary);
+    font-weight: 300;
+    line-height: 1.8;
+}
+
+.chapter-section:nth-child(odd) .chapter-content {
+    margin-left: 10%;
+}
+
+.chapter-section:nth-child(even) .chapter-content {
+    margin-left: auto;
+    margin-right: 10%;
+    border-left: none;
+    border-right: 4px solid var(--theme-color, #ffffff);
+}
+
+.closing {
+    align-items: center;
+    text-align: center;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+}
+
+.closing h2 {
+    font-size: clamp(1.8rem, 3vw, 3rem);
+    max-width: 800px;
+    line-height: 1.5;
+    font-weight: 400;
+}
+
+@media (max-width: 768px) {
+    .chapter-section {
+        justify-content: center;
+        min-height: 100vh;
+    }
+    .chapter-section:nth-child(odd) .chapter-content,
+    .chapter-section:nth-child(even) .chapter-content {
+        margin: 0;
+        border-left: 4px solid var(--theme-color, #ffffff);
+        border-right: none;
+    }
+    .chapter-content {
+        padding: 2rem;
+    }
+}
